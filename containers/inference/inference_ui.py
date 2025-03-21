@@ -315,17 +315,6 @@ if upload_file is not None:
     
     # Add user input fields for cost estimation
     st.subheader("User Feedback")
-    
-    feedback = None
-    col1, col2 = st.columns(2)
-
-    with col1:
-        if st.button("👍 Thumbs Up"):
-            feedback = "positive"
-
-    with col2:
-        if st.button("👎 Thumbs Down"):
-            feedback = "negative"
             
     estimated_cost = st.number_input("Repair Cost ($)", min_value=0, step=10, value=0)
     parts_for_repair = st.text_area("Parts Required for Repair (comma-separated)", value="Right fender, Paint")
@@ -336,7 +325,16 @@ if upload_file is not None:
     # Convert parts_for_repair input from string to list
     parts_for_repair_list = [part.strip() for part in parts_for_repair.split(",") if part.strip()]
 
+    feedback = None
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("👍 Thumbs Up"):
+            feedback = "positive"
 
+    with col2:
+        if st.button("👎 Thumbs Down"):
+            feedback = "negative"
+            
     if feedback:
     # Construct JSON data
         response_data = {
