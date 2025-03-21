@@ -130,9 +130,24 @@ if upload_file is not None:
 #Reads the file and encodes it
     file_bytes = upload_file.read()
     
+    # base64_bytes = file_bytes.encode('ascii')
+    # image_bytes = base64.b64decode(base64_bytes)
+    
+    s3_client = boto3.client("s3")
+    BUCKET_NAME = "uploaded-images-bucket-for-blog"
+    FILE_NAME = upload_file.name
+    
+    s3_client.put_object(
+        Bucket=BUCKET_NAME,
+        Key=FILE_NAME,
+        Body=file_bytes,
+        ContentType="image/jpeg"
+    )
+    
     vehicle_present, message = check_vehicle_presence(file_bytes)
     if not vehicle_present:
         st.error("No vehicle detected in the uploaded image. Please upload an image containing a vehicle.")
+        
     
     encoded_image = base64.b64encode(file_bytes).decode()
 #Creates the JSON metadata based on the options selected by the user
@@ -313,56 +328,90 @@ if upload_file is not None:
                                         "content": answer})
     
     
-    # Add user input fields for cost estimation
-    st.subheader("User Feedback")
-            
-    estimated_cost = st.number_input("Repair Cost ($)", min_value=0, step=10, value=0)
-    parts_for_repair = st.text_area("Parts Required for Repair (comma-separated)", value="Right fender, Paint")
-    labor_hours = st.number_input("Estimated Labor Hours", min_value=0, step=1, value=0)
-    parts_cost = st.number_input("Parts Cost ($)", min_value=0, step=10, value=0)
-    labor_cost = st.number_input("Labor Cost ($)", min_value=0, step=10, value=0)
+# Add user input fields for cost estimation
+st.subheader("User Feedback")
+        
+if "estimated_cost" not in st.session_state:
+    st.session_state.estimated_cost = 0
+if "parts_for_repair" not in st.session_state:
+    st.session_state.parts_for_repair = "Right fender, Paint"
+if "labor_hours" not in st.session_state:
+    st.session_state.labor_hours = 0
+if "parts_cost" not in st.session_state:
+    st.session_state.parts_cost = 0
+if "labor_cost" not in st.session_state:
+    st.session_state.labor_cost = 0
+if "feedback_given" not in st.session_state:
+    st.session_state.feedback_given = False
 
-    # Convert parts_for_repair input from string to list
-    parts_for_repair_list = [part.strip() for part in parts_for_repair.split(",") if part.strip()]
+st.session_state.estimated_cost = st.number_input("Repair Cost ($)", min_value=0, step=10, value=st.session_state.estimated_cost)
+st.session_state.parts_for_repair = st.text_area("Parts Required for Repair (comma-separated)", value=st.session_state.parts_for_repair)
+st.session_state.labor_hours = st.number_input("Estimated Labor Hours", min_value=0, step=1, value=st.session_state.labor_hours)
+st.session_state.parts_cost = st.number_input("Parts Cost ($)", min_value=0, step=10, value=st.session_state.parts_cost)
+st.session_state.labor_cost = st.number_input("Labor Cost ($)", min_value=0, step=10, value=st.session_state.labor_cost)
 
-    feedback = None
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("👍 Thumbs Up"):
-            feedback = "positive"
+# Convert parts_for_repair input from string to list
+parts_for_repair_list = [part.strip() for part in st.session_state.parts_for_repair.split(",") if part.strip()]
 
-    with col2:
-        if st.button("👎 Thumbs Down"):
-            feedback = "negative"
-            
-    if feedback:
-    # Construct JSON data
-        response_data = {
-            "make": selected,
-            "model": selected_make,
-            "state": "FL",
-            "damage": selected_damage_area,
-            "damage_severity": selected_damage_sev,
-            "damage_description": text,  # Claude 3 response
-            "repair_cost": estimated_cost,  # Extract from Claude 3
-            "parts_for_repair": parts_for_repair,  # Extract from Claude 3
-            "labor_hours": labor_hours,  # Extract from Claude 3
-            "parts_cost": parts_cost,  # Extract from Claude 3
-            "labor_cost": labor_cost,  # Extract from Claude 3
-            "s3_location": f"",
-            "feedback": feedback
-        }
+feedback = None
+col1, col2 = st.columns(2)
 
-        # Convert to JSON
-        json_data = json.dumps(response_data)
+with col1:
+    if st.button("👍 Thumbs Up") and not st.session_state.feedback_given:
+        feedback = "positive"
 
-        # Upload to S3
-        s3_client = boto3.client("s3")
-        s3_client.put_object(
-            Bucket="meet-harsh-vatsal-blog-store",
-            Key=f"repair-data/{upload_file.name}.json",
-            Body=json_data,
-            ContentType="application/json"
-        )
+with col2:
+    if st.button("👎 Thumbs Down") and not st.session_state.feedback_given:
+        feedback = "negative"
+        
+if feedback and not st.session_state.feedback_given:
+    st.session_state.feedback_given = True  # Prevents multiple submissions
 
-        st.success(f"Feedback saved successfully as {feedback}!")
+    BUCKET_NAME = "meet-harsh-vatsal-blog-store"
+    FILE_NAME = "vatsal.json"
+
+    s3_client = boto3.client("s3")
+
+# Try to fetch the existing JSON file from S3
+    try:
+        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=FILE_NAME)
+        existing_data = json.loads(response["Body"].read().decode("utf-8"))  # Load existing JSON
+    except s3_client.exceptions.NoSuchKey:
+        existing_data = []  # If file doesn't exist, initialize an empty list
+
+# Ensure it's a list
+    if not isinstance(existing_data, list):
+        existing_data = []
+
+# Construct the new response data
+    new_entry = {
+        "make": selected,
+        "model": selected_make,
+        "state": "FL",
+        "damage": selected_damage_area,
+        "damage_severity": selected_damage_sev,
+        "damage_description": "aneri",  # Claude 3 response
+        "repair_cost": st.session_state.estimated_cost,
+        "parts_for_repair": parts_for_repair_list,  # Ensure list format
+        "labor_hours": st.session_state.labor_hours,
+        "parts_cost": st.session_state.parts_cost,
+        "labor_cost": st.session_state.labor_cost,
+        "s3_location": f"https://uploaded-images-bucket-for-blog.s3.us-east-1.amazonaws.com/{upload_file.name}",
+        "feedback": feedback
+    }
+
+# Append the new entry to the existing list
+    existing_data.append(new_entry)
+
+# Convert to JSON string
+    json_data = json.dumps(existing_data, indent=2)
+
+# Upload the updated JSON back to S3
+    s3_client.put_object(
+        Bucket=BUCKET_NAME,
+        Key=FILE_NAME,
+        Body=json_data,
+        ContentType="application/json"
+    )
+
+    st.success(f"Feedback saved successfully as {feedback}!")
