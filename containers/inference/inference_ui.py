@@ -112,12 +112,28 @@ def response_streaming(invoke_body):
                 yield chunk['delta']['text'].replace("$", "\$")
 
 
+def check_vehicle_presence(image_bytes):
+    rekognition_client = boto3.client("rekognition")
+    response = rekognition_client.detect_labels(Image={"Bytes": image_bytes})
+    labels = [label["Name"] for label in response["Labels"]]
+
+    if "Vehicle" not in labels:
+        return False, "No vehicle detected"
+
+    return True, "Vehicle detected"
+
+
 if upload_file is not None:
     #once the file is consumed, first time then update the uploader_key, so that this piece of code will not be triggered again.
     st.session_state.uploader_key += 1
     file_details = {"filename":upload_file.name, "filetype":upload_file.type, "filesize":upload_file.size}
 #Reads the file and encodes it
     file_bytes = upload_file.read()
+    
+    vehicle_present, message = check_vehicle_presence(file_bytes)
+    if not vehicle_present:
+        st.error("No vehicle detected in the uploaded image. Please upload an image containing a vehicle.")
+    
     encoded_image = base64.b64encode(file_bytes).decode()
 #Creates the JSON metadata based on the options selected by the user
     json_text = {
@@ -272,7 +288,8 @@ if upload_file is not None:
 
             st.image(img)
     combined_metadata_string = '\n'.join(metadata_strings)
-    prompt_full = '<current>' + json_string + '</current>' + '<dataset>' + combined_metadata_string + '</dataset> Instruction; You are calculating the estimated repair cost based on previous data of similar car damages. Take the repair cost of the data set provide within <dataset> and calculate the average cost among all example data sets. And you also need to provide a recommended service provider name from the dataset provided within <dataset> based on the state in which car is damaged and it should be closest one. Explain the math, but you must be brief, and the service provider name should be in a single line, the answer cannot have more than 3 sentences.' 
+    prompt_full = '<current>' + json_string + '</current>' + '<dataset>' + combined_metadata_string + '</dataset> Instruction; You are calculating the estimated repair cost based on previous data of similar car damages. Take the repair cost of the data set provide within <dataset> and calculate the average cost among all example data sets. And you also need to provide a recommended service provider name from the dataset provided within <dataset> based on the state in which car is damaged and it should be closest one. Explain the math, but you must be brief, and the service provider name should be in next line with the sentence "Recommended Service Provider Name: <service-provider-name>", the answer cannot have more than 3 sentences.'
+    
     invoke_body = {
     'anthropic_version': 'bedrock-2023-05-31',
     'max_tokens': 1000,

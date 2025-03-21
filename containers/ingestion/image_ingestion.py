@@ -225,7 +225,6 @@ def ingest_image_s3(file_contents, start_index, end_index, client, file_key , os
     print('-----------------------------')
     batch_files = list(file_contents.items())[start_index:end_index]
     for file_key, file_binary in batch_files:
-
         encoded_image = base64.b64encode(file_binary).decode('utf-8')
         json_text = create_json_metadata(encoded_image, instruction)
         json_string = json.dumps(json_text)
