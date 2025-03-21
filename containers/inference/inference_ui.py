@@ -311,3 +311,60 @@ if upload_file is not None:
 
     st.session_state.messages.append({"role": "assistant",
                                         "content": answer})
+    
+    
+    # Add user input fields for cost estimation
+    st.subheader("User Feedback")
+    
+    feedback = None
+    col1, col2 = st.columns(2)
+
+    with col1:
+        if st.button("👍 Thumbs Up"):
+            feedback = "positive"
+
+    with col2:
+        if st.button("👎 Thumbs Down"):
+            feedback = "negative"
+            
+    estimated_cost = st.number_input("Repair Cost ($)", min_value=0, step=10, value=0)
+    parts_for_repair = st.text_area("Parts Required for Repair (comma-separated)", value="Right fender, Paint")
+    labor_hours = st.number_input("Estimated Labor Hours", min_value=0, step=1, value=0)
+    parts_cost = st.number_input("Parts Cost ($)", min_value=0, step=10, value=0)
+    labor_cost = st.number_input("Labor Cost ($)", min_value=0, step=10, value=0)
+
+    # Convert parts_for_repair input from string to list
+    parts_for_repair_list = [part.strip() for part in parts_for_repair.split(",") if part.strip()]
+
+
+    if feedback:
+    # Construct JSON data
+        response_data = {
+            "make": selected,
+            "model": selected_make,
+            "state": "FL",
+            "damage": selected_damage_area,
+            "damage_severity": selected_damage_sev,
+            "damage_description": text,  # Claude 3 response
+            "repair_cost": estimated_cost,  # Extract from Claude 3
+            "parts_for_repair": parts_for_repair,  # Extract from Claude 3
+            "labor_hours": labor_hours,  # Extract from Claude 3
+            "parts_cost": parts_cost,  # Extract from Claude 3
+            "labor_cost": labor_cost,  # Extract from Claude 3
+            "s3_location": f"",
+            "feedback": feedback
+        }
+
+        # Convert to JSON
+        json_data = json.dumps(response_data)
+
+        # Upload to S3
+        s3_client = boto3.client("s3")
+        s3_client.put_object(
+            Bucket="meet-harsh-vatsal-blog-store",
+            Key=f"repair-data/{upload_file.name}.json",
+            Body=json_data,
+            ContentType="application/json"
+        )
+
+        st.success(f"Feedback saved successfully as {feedback}!")

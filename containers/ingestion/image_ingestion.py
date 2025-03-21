@@ -60,17 +60,17 @@ s3 = session.client('s3')
 instruction_model_1 = 'Instruction: You are a damage repair cost estimator and based on the image you need to create a json output as close as possible to the <model>, \
 you need to estimate the repair cost to populate within the output and you need to provide the damage_severity according to the <criteria>, \
 you also need to provide a damage_description which is short and less than 10 words. Just provide the json output in the response, do not explain the reasoning. \
-For testing purposes assume the image is from a fictitious car brand "Make_1" and a ficticious model "Model_1" in the state of Florida.'
+For testing purposes assume the image is from a fictitious car brand "Make_1" and a ficticious model "Model_1" in the state of Florida and the service provider name should be according to the state.'
 
 instruction_model_2 = 'Instruction: You are a damage repair cost estimator and based on the image you need to create a json output as close as possible to the <model>, \
 you need to estimate the repair cost to populate within the output and you need to provide the damage_severity according to the <criteria>, \
 you also need to provide a damage_description which is short and less than 10 words. Just provide the json output in the response, do not explain the reasoning. \
-For testing purposes assume the image is from a fictitious car brand "Make_2" and a ficticious model "Model_2" in the state of Florida.'
+For testing purposes assume the image is from a fictitious car brand "Make_2" and a ficticious model "Model_2" in the state of Florida and the service provider name should be according to the state.'
 
 instruction_model_3 = 'Instruction: You are a damage repair cost estimator and based on the image you need to create a json output as close as possible to the <model>, \
 you need to estimate the repair cost to populate within the output and you need to provide the damage_severity according to the <criteria>, \
 you also need to provide a damage_description which is short and less than 10 words. Just provide the json output in the response, do not explain the reasoning. \
-For testing purposes assume the image is from a fictitious car brand "Make_3" and a ficticious model "Model_3" in the state of Florida.'
+For testing purposes assume the image is from a fictitious car brand "Make_3" and a ficticious model "Model_3" in the state of Florida and the service provider name should be according to the state.'
 
 bedrock_client = session.client('bedrock-runtime', config=config)
 
