@@ -272,7 +272,7 @@ if upload_file is not None:
 
             st.image(img)
     combined_metadata_string = '\n'.join(metadata_strings)
-    prompt_full = '<current>' + json_string + '</current>' + '<dataset>' + combined_metadata_string + '</dataset> Instruction; You are calculating the estimated repair cost based on previous data of similar car damages. Take the repair cost of the data set provide within <dataset> and calculate the average cost among all example data sets. Explain the math, but you must be brief, the answer cannot have more than 3 sentences.' 
+    prompt_full = '<current>' + json_string + '</current>' + '<dataset>' + combined_metadata_string + '</dataset> Instruction; You are calculating the estimated repair cost based on previous data of similar car damages. Take the repair cost of the data set provide within <dataset> and calculate the average cost among all example data sets. And you also need to provide a recommended service provider name from the dataset provided within <dataset> based on the state in which car is damaged and it should be closest one. Explain the math, but you must be brief, and the service provider name should be in a single line, the answer cannot have more than 3 sentences.' 
     invoke_body = {
     'anthropic_version': 'bedrock-2023-05-31',
     'max_tokens': 1000,

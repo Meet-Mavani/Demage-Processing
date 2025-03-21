@@ -92,6 +92,7 @@ def create_json_metadata(encoded_image, instruction):
         "labor_hours": XX,\
         "parts_cost": XXXX,\
         "labor_cost" \
+        "service_provider": "add a random service provider name, for example: FastFix Auto" \
       }\
     </model>'
     criteria_cost = '<criteria> \
