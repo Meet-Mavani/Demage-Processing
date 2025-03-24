@@ -63,6 +63,7 @@ st.session_state.selected = None
 st.session_state.selected_make = None
 st.session_state.selected_damage_type = None
 st.session_state.selected_damage_sev = None
+st.session_state.similar_images = []
 
 st.session_state.selected = st.sidebar.selectbox('Select Car Make', options)
 
@@ -316,6 +317,7 @@ if upload_file is not None:
     for i, hit in enumerate(results['hits']['hits']):
         metadata = hit['_source']['metadata']
         s3_location = metadata['s3_location']
+        st.session_state.similar_images.append(s3_location)
         score = hit['_score']
         metadata_string = json.dumps(metadata, indent=2)  # Convert metadata to JSON string
         metadata_strings.append(metadata_string)  # Append the metadata string to the list

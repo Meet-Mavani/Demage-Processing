@@ -62,6 +62,7 @@ if st.button("Submit"):
         "parts_cost": st.session_state.parts_cost,
         "labor_cost": st.session_state.labor_cost,
         "s3_location": f"https://uploaded-images-bucket-for-blog.s3.us-east-1.amazonaws.com/{st.session_state.uploaded_file_data["filename"]}",
+        "reference_images": st.session_state.similar_images,
         "relevence": st.session_state.relevence
     }
 
