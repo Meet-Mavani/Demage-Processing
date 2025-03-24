@@ -6,8 +6,9 @@ import streamlit as st
 st.subheader("User Feedback")
 
 # Get relevance from session state or query params
-query_params = st.experimental_get_query_params()
+query_params = st.query_params
 st.session_state.relevance = query_params.get("relevance", [st.session_state.get("relevance", None)])[0]
+st.write(f"Feedback Type: {st.session_state.relevance}")  
 
 if "service_center" not in st.session_state:
     st.session_state.service_center = 0
