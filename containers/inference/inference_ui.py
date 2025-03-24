@@ -57,25 +57,32 @@ damage_type_options = ['Scratch', 'Dent', 'Fender Bender', "Broken"]
 damage_sev_option = ['light', 'moderate', 'severe', 'major']
 
 options = ['Make_1', 'Make_2', 'Make_3']
-selected = st.sidebar.selectbox('Select Car Make', options)
+
+# initialize session_state of fields
+st.session_state.selected = None
+st.session_state.selected_make = None
+st.session_state.selected_damage_type = None
+st.session_state.selected_damage_sev = None
+
+st.session_state.selected = st.sidebar.selectbox('Select Car Make', options)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 # Make and Model options
-if selected == 'Make_1':
+if st.session_state.selected == 'Make_1':
     second_options = ['Model_1']
-elif selected == 'Make_2':
+elif st.session_state.selected == 'Make_2':
     second_options = ['Model_2'] 
 else:
-    selected = ['Make_3']
+    st.session_state.selected = ['Make_3']
     second_options = ['Model_3']
 
 # Select boxes for all options
-selected_make = st.sidebar.selectbox('Second Make', second_options)
-selected_damage_area = st.sidebar.multiselect('Damage Area. Select as many parts as possible that might be involed on this damage:', damage_area_options)
-selected_damage_type = st.sidebar.multiselect('Damage Type. Select as many damage types as possible that can describe the damage: ', damage_type_options)
-selected_damage_sev = st.sidebar.selectbox('Damage Severity', damage_sev_option)
+st.session_state.selected_make = st.sidebar.selectbox('Second Make', second_options)
+st.session_state.selected_damage_area = st.sidebar.multiselect('Damage Area. Select as many parts as possible that might be involed on this damage:', damage_area_options)
+st.session_state.selected_damage_type = st.sidebar.multiselect('Damage Type. Select as many damage types as possible that can describe the damage: ', damage_type_options)
+st.session_state.selected_damage_sev = st.sidebar.selectbox('Damage Severity', damage_sev_option)
 
 matches = ['1', '2', '3']
 
@@ -83,9 +90,11 @@ number_of_matches = st.sidebar.selectbox('Number of matches from the OS Vector D
 # session state is valid through out the lifecycle of the app until the whole page is reloaded. we initialize the key to 0 here
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = 0
+if "uploaded_file_data" not in st.session_state:
+    st.session_state.uploaded_file_data = None  # Stores the file data
 
 #dynamically generate the key for the uploaded file
-upload_file = st.sidebar.file_uploader("here you will upload your damage image", key=f"uploader_{st.session_state.uploader_key}")
+upload_file = st.sidebar.file_uploader("here you will upload your damage image", key=st.session_state.uploader_key)
 
 def response_streaming(invoke_body):
     st.write('**Streaming the Final Calculation**')
@@ -125,10 +134,23 @@ def check_vehicle_presence(image_bytes):
 
 if upload_file is not None:
     #once the file is consumed, first time then update the uploader_key, so that this piece of code will not be triggered again.
+    st.session_state.uploaded_file_data = {
+        "filename": upload_file.name,
+        "filetype": upload_file.type,
+        "filesize": upload_file.size,
+        "content": base64.b64encode(upload_file.read()).decode(),  # Store encoded file data
+    }
+    
     st.session_state.uploader_key += 1
+    
     file_details = {"filename":upload_file.name, "filetype":upload_file.type, "filesize":upload_file.size}
 #Reads the file and encodes it
+    upload_file.seek(0)  # Reset pointer to beginning
     file_bytes = upload_file.read()
+
+    if not file_bytes:  # Check if file_bytes is empty
+        st.error("Uploaded file is empty. Please upload a valid image.")
+        st.stop()
     
     # base64_bytes = file_bytes.encode('ascii')
     # image_bytes = base64.b64decode(base64_bytes)
@@ -143,6 +165,7 @@ if upload_file is not None:
         Body=file_bytes,
         ContentType="image/jpeg"
     )
+
     
     vehicle_present, message = check_vehicle_presence(file_bytes)
     if not vehicle_present:
@@ -152,12 +175,12 @@ if upload_file is not None:
     encoded_image = base64.b64encode(file_bytes).decode()
 #Creates the JSON metadata based on the options selected by the user
     json_text = {
-    "make": selected,
-    "model": selected_make,
+    "make": st.session_state.selected,
+    "model": st.session_state.selected_make,
     "state": "FL",
-    "damage": selected_damage_area,
-    "damage_severity": selected_damage_sev,
-    "damage_type": selected_damage_type
+    "damage": st.session_state.selected_damage_area,
+    "damage_severity": st.session_state.selected_damage_sev,
+    "damage_type": st.session_state.selected_damage_type
     }
 #Turns the string into json and encodes it into base64 encoded bytes
     json_string = json.dumps(json_text)
@@ -221,6 +244,9 @@ if upload_file is not None:
 
     json_string = json.dumps(text)
     data_2 = json.loads(json_string)
+    
+    print(data_2)
+    st.session_state.damage_description = json.loads(text)["damage_description"]
     #st.write('JSON output Created by Claude 3 Haiku:')
     #st.write(text)
     json_bytes = data_2.encode('utf-8') 
@@ -327,95 +353,18 @@ if upload_file is not None:
     st.session_state.messages.append({"role": "assistant",
                                         "content": answer})
     
+st.session_state.relevence = None
     
-# Add user input fields for cost estimation
-st.subheader("User Feedback")
-     
-if "service_center" not in st.session_state:
-    st.session_state.service_center = 0
-if "estimated_cost" not in st.session_state:
-    st.session_state.estimated_cost = 0
-if "parts_for_repair" not in st.session_state:
-    st.session_state.parts_for_repair = "Right fender, Paint"
-if "labor_hours" not in st.session_state:
-    st.session_state.labor_hours = 0
-if "parts_cost" not in st.session_state:
-    st.session_state.parts_cost = 0
-if "labor_cost" not in st.session_state:
-    st.session_state.labor_cost = 0
-if "feedback_given" not in st.session_state:
-    st.session_state.feedback_given = False
-
-st.session_state.service_center = st.text_area("Service Center Name", value=st.session_state.service_center)
-st.session_state.estimated_cost = st.number_input("Repair Cost ($)", min_value=0, step=10, value=st.session_state.estimated_cost)
-st.session_state.parts_for_repair = st.text_area("Parts Required for Repair (comma-separated)", value=st.session_state.parts_for_repair)
-st.session_state.labor_hours = st.number_input("Estimated Labor Hours", min_value=0, step=1, value=st.session_state.labor_hours)
-st.session_state.parts_cost = st.number_input("Parts Cost ($)", min_value=0, step=10, value=st.session_state.parts_cost)
-st.session_state.labor_cost = st.number_input("Labor Cost ($)", min_value=0, step=10, value=st.session_state.labor_cost)
-
-# Convert parts_for_repair input from string to list
-parts_for_repair_list = [part.strip() for part in st.session_state.parts_for_repair.split(",") if part.strip()]
-
-feedback = None
 col1, col2 = st.columns(2)
 
 with col1:
-    if st.button("👍 Thumbs Up") and not st.session_state.feedback_given:
-        feedback = "positive"
+    if st.button("👍 Thumbs Up") and not st.session_state.relevence:
+        st.session_state.relevence = "positive"
 
 with col2:
-    if st.button("👎 Thumbs Down") and not st.session_state.feedback_given:
-        feedback = "negative"
+    if st.button("👎 Thumbs Down") and not st.session_state.relevence:
+        st.session_state.relevence = "negative"
         
-if feedback and not st.session_state.feedback_given:
-    st.session_state.feedback_given = True  # Prevents multiple submissions
-
-    BUCKET_NAME = "meet-harsh-vatsal-blog-store"
-    FILE_NAME = "vatsal.json"
-
-    s3_client = boto3.client("s3")
-
-# Try to fetch the existing JSON file from S3
-    try:
-        response = s3_client.get_object(Bucket=BUCKET_NAME, Key=FILE_NAME)
-        existing_data = json.loads(response["Body"].read().decode("utf-8"))  # Load existing JSON
-    except s3_client.exceptions.NoSuchKey:
-        existing_data = []  # If file doesn't exist, initialize an empty list
-
-# Ensure it's a list
-    if not isinstance(existing_data, list):
-        existing_data = []
-
-# Construct the new response data
-    new_entry = {
-        "make": selected,
-        "model": selected_make,
-        "state": "FL",
-        "damage": selected_damage_area,
-        "damage_severity": selected_damage_sev,
-        "damage_description": "aneri",  # Claude 3 response
-        "service_center": st.session_state.service_center,
-        "repair_cost": st.session_state.estimated_cost,
-        "parts_for_repair": parts_for_repair_list,  # Ensure list format
-        "labor_hours": st.session_state.labor_hours,
-        "parts_cost": st.session_state.parts_cost,
-        "labor_cost": st.session_state.labor_cost,
-        "s3_location": f"https://uploaded-images-bucket-for-blog.s3.us-east-1.amazonaws.com/{upload_file.name}",
-        "feedback": feedback
-    }
-
-# Append the new entry to the existing list
-    existing_data.append(new_entry)
-
-# Convert to JSON string
-    json_data = json.dumps(existing_data, indent=2)
-
-# Upload the updated JSON back to S3
-    s3_client.put_object(
-        Bucket=BUCKET_NAME,
-        Key=FILE_NAME,
-        Body=json_data,
-        ContentType="application/json"
-    )
-
-    st.success(f"Feedback saved successfully as {feedback}!")
+# go to next page for user feedback
+if st.button("Feedback"):
+    st.switch_page("pages/feedback.py")
