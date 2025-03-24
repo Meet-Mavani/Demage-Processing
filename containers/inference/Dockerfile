@@ -18,7 +18,7 @@ EXPOSE 8501
 RUN adduser -u 5678 --disabled-password --gecos "" appuser
 
 WORKDIR /home/appuser/app
-COPY inference_ui.py /home/appuser/app
+COPY . /home/appuser/app
 RUN cat inference_ui.py
 
 RUN ls -la
