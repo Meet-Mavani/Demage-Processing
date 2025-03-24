@@ -330,7 +330,9 @@ if upload_file is not None:
     
 # Add user input fields for cost estimation
 st.subheader("User Feedback")
-        
+     
+if "service_center" not in st.session_state:
+    st.session_state.service_center = 0
 if "estimated_cost" not in st.session_state:
     st.session_state.estimated_cost = 0
 if "parts_for_repair" not in st.session_state:
@@ -344,6 +346,7 @@ if "labor_cost" not in st.session_state:
 if "feedback_given" not in st.session_state:
     st.session_state.feedback_given = False
 
+st.session_state.service_center = st.text_area("Service Center Name", value=st.session_state.service_center)
 st.session_state.estimated_cost = st.number_input("Repair Cost ($)", min_value=0, step=10, value=st.session_state.estimated_cost)
 st.session_state.parts_for_repair = st.text_area("Parts Required for Repair (comma-separated)", value=st.session_state.parts_for_repair)
 st.session_state.labor_hours = st.number_input("Estimated Labor Hours", min_value=0, step=1, value=st.session_state.labor_hours)
@@ -391,6 +394,7 @@ if feedback and not st.session_state.feedback_given:
         "damage": selected_damage_area,
         "damage_severity": selected_damage_sev,
         "damage_description": "aneri",  # Claude 3 response
+        "service_center": st.session_state.service_center,
         "repair_cost": st.session_state.estimated_cost,
         "parts_for_repair": parts_for_repair_list,  # Ensure list format
         "labor_hours": st.session_state.labor_hours,
