@@ -368,11 +368,13 @@ col1, col2 = st.columns(2)
 
 # go to next page for user feedback
 with col1:
-    if st.button("👍 Thumbs Up") and not st.session_state.relevence:
+    if st.button("👍 Thumbs Up"):
         st.session_state.relevance = "positive"
+        st.experimental_set_query_params(relevance="positive")
         st.switch_page("pages/feedback.py")
 
 with col2:
-    if st.button("👎 Thumbs Down") and not st.session_state.relevence:
+    if st.button("👎 Thumbs Down"):
         st.session_state.relevance = "negative"
+        st.experimental_set_query_params(relevance="negative")
         st.switch_page("pages/feedback.py")
