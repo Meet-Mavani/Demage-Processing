@@ -59,11 +59,21 @@ damage_sev_option = ['light', 'moderate', 'severe', 'major']
 options = ['Make_1', 'Make_2', 'Make_3']
 
 # initialize session_state of fields
-st.session_state.selected = None
-st.session_state.selected_make = None
-st.session_state.selected_damage_type = None
-st.session_state.selected_damage_sev = None
-st.session_state.similar_images = []
+if "selected" not in st.session_state:
+    st.session_state.selected = []
+if "selected_make" not in st.session_state:
+    st.session_state.selected_make = None
+if "selected_damage_type" not in st.session_state:
+    st.session_state.selected_damage_type = 0
+if "selected_damage_sev" not in st.session_state:
+    st.session_state.selected_damage_sev = None
+if "similar_images" not in st.session_state:
+    st.session_state.similar_images = []
+if "damage_description" not in st.session_state:
+    st.session_state.damage_description = ""
+if "relevance" not in st.session_state:
+    st.session_state.relevance = None
+    
 
 st.session_state.selected = st.sidebar.selectbox('Select Car Make', options)
 
@@ -245,8 +255,6 @@ if upload_file is not None:
 
     json_string = json.dumps(text)
     data_2 = json.loads(json_string)
-    
-    print(data_2)
     st.session_state.damage_description = json.loads(text)["damage_description"]
     #st.write('JSON output Created by Claude 3 Haiku:')
     #st.write(text)
@@ -317,6 +325,7 @@ if upload_file is not None:
     for i, hit in enumerate(results['hits']['hits']):
         metadata = hit['_source']['metadata']
         s3_location = metadata['s3_location']
+        print(s3_location)
         st.session_state.similar_images.append(s3_location)
         score = hit['_score']
         metadata_string = json.dumps(metadata, indent=2)  # Convert metadata to JSON string
@@ -355,18 +364,15 @@ if upload_file is not None:
     st.session_state.messages.append({"role": "assistant",
                                         "content": answer})
     
-st.session_state.relevence = None
-    
 col1, col2 = st.columns(2)
 
+# go to next page for user feedback
 with col1:
     if st.button("👍 Thumbs Up") and not st.session_state.relevence:
-        st.session_state.relevence = "positive"
+        st.session_state.relevance = "positive"
+        st.switch_page("pages/feedback.py")
 
 with col2:
     if st.button("👎 Thumbs Down") and not st.session_state.relevence:
-        st.session_state.relevence = "negative"
-        
-# go to next page for user feedback
-if st.button("Feedback"):
-    st.switch_page("pages/feedback.py")
+        st.session_state.relevance = "negative"
+        st.switch_page("pages/feedback.py")

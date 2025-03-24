@@ -4,7 +4,7 @@ import streamlit as st
 
 # Add user input fields for cost estimation
 st.subheader("User Feedback")
-     
+
 if "service_center" not in st.session_state:
     st.session_state.service_center = 0
 if "estimated_cost" not in st.session_state:
@@ -63,7 +63,7 @@ if st.button("Submit"):
         "labor_cost": st.session_state.labor_cost,
         "s3_location": f"https://uploaded-images-bucket-for-blog.s3.us-east-1.amazonaws.com/{st.session_state.uploaded_file_data["filename"]}",
         "reference_images": st.session_state.similar_images,
-        "relevence": st.session_state.relevence
+        "relevance": st.session_state.relevance
     }
 
     # Append the new entry to the existing list
