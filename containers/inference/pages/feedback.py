@@ -7,7 +7,11 @@ st.subheader("User Feedback")
 
 # Get relevance from session state or query params
 query_params = st.query_params
-st.session_state.relevance = query_params.get("relevance", [st.session_state.get("relevance", None)])[0]
+relevance_short = query_params.get("relevance", [st.session_state.get("relevance", None)])[0]
+
+relevance_mapping = {"p": "positive", "n": "negative"}
+st.session_state.relevance = relevance_mapping.get(relevance_short, relevance_short)  
+
 st.write(f"Feedback Type: {st.session_state.relevance}")  
 
 if "service_center" not in st.session_state:
