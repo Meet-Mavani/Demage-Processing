@@ -136,11 +136,12 @@ def check_vehicle_presence(image_bytes):
     rekognition_client = boto3.client("rekognition")
     response = rekognition_client.detect_labels(Image={"Bytes": image_bytes})
     labels = [label["Name"] for label in response["Labels"]]
+    print(labels)
 
-    if "Vehicle" not in labels:
-        return False, "No vehicle detected"
+    if "Car" not in labels or "car" not in labels:
+        return False, "No Car detected"
 
-    return True, "Vehicle detected"
+    return True, "Car detected"
 
 
 if upload_file is not None:
