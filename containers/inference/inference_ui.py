@@ -181,7 +181,7 @@ if upload_file is not None:
     
     vehicle_present, message = check_vehicle_presence(file_bytes)
     if not vehicle_present:
-        st.error("No vehicle detected in the uploaded image. Please upload an image containing a vehicle.")
+        st.error("No car detected in the uploaded image. Please upload an image containing a car.")
         
     
     encoded_image = base64.b64encode(file_bytes).decode()
