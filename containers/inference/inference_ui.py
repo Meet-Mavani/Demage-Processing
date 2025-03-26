@@ -137,11 +137,13 @@ def check_vehicle_presence(image_bytes):
     response = rekognition_client.detect_labels(Image={"Bytes": image_bytes})
     labels = [label["Name"] for label in response["Labels"]]
     print(labels)
-
-    if "Car" not in labels or "car" not in labels:
-        return False, "No Car detected"
-
-    return True, "Car detected"
+    
+    if "Car"  in labels:
+         return True, "Car detected"
+    elif "car"  in labels:
+         return True, "Car detected"
+    else:
+         return False, "No Car detected"
 
 
 if upload_file is not None:
