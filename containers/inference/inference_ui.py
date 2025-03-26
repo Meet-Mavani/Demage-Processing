@@ -366,18 +366,18 @@ if upload_file is not None:
         st.session_state.messages.append({"role": "assistant",
                                             "content": answer})
         
-        col1, col2 = st.columns(2)
+col1, col2 = st.columns(2)
 
-        # go to next page for user feedback
-        with col1:
-            if st.button("👍 Thumbs Up"):
-                st.session_state.relevance = "positive"
-                st.query_params["relevance"] = "positive"
-                st.switch_page("pages/feedback.py")
+# go to next page for user feedback
+with col1:
+    if st.button("👍 Thumbs Up"):
+        st.session_state.relevance = "positive"
+        st.query_params["relevance"] = "positive"
+        st.switch_page("pages/feedback.py")
 
-        with col2:
-            if st.button("👎 Thumbs Down"):
-                st.session_state.relevance = "negative"
-                st.query_params["relevance"] = "negative"
-                st.switch_page("pages/feedback.py")   
+with col2:
+    if st.button("👎 Thumbs Down"):
+        st.session_state.relevance = "negative"
+        st.query_params["relevance"] = "negative"
+        st.switch_page("pages/feedback.py")   
         
